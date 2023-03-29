@@ -1,0 +1,26 @@
+{
+  "name": "highcharts-react-demo",
+  "version": "0.0.4",
+  "description": "Demo which shows how to use Highcharts react wrapper.",
+  "keywords": [],
+  "main": "demo.jsx",
+  "dependencies": {
+    "@highcharts/map-collection": "1.1.2",
+    "highcharts": "latest",
+    "highcharts-react-official": "2.0.0",
+    "jquery": "3.3.1",
+    "react": "16.7.0",
+    "react-dom": "16.7.0",
+    "react-router-dom": "5.0.0",
+    "react-scripts": "1.1.4"
+  },
+  "devDependencies": {
+    "react-scripts": "1.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
