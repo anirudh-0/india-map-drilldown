@@ -140,19 +140,16 @@ const reactChartOptions = {
 //   );
 // }
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      options: reactChartOptions,
-      mapLoaded: false,
-    };
-  }
-  componentDidMount() {
-    this.loadMap("india_states");
-  }
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, function (txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+}
 
-  loadMap = async (mapKey) => {
+function App() {
+  const [options, setOptions] = useState(reactChartOptions);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const loadMap = useCallback(async (mapKey) => {
     fetch(`/${mapKey}.geojson`)
       .then((res) => res.json())
       .then((data) => {
@@ -164,44 +161,173 @@ class App extends React.Component {
             el.drilldown = el.properties.STATE;
           }
           el.value = i; // Non-random bogus data
-          el.name = el.properties.STATE;
+          el.name = toTitleCase(el.properties.STATE);
         });
-        this.setState(({ options }) => {
+        setMapLoaded(true);
+        setOptions((options) => {
           return {
-            mapLoaded: true,
-            options: {
-              ...options,
-              chart: { events: { drilldown: function (e) {} } },
-              series: [
-                {
-                  data: map,
-                  name: mapKey,
-                  dataLabels: {
-                    enabled: true,
-                    format: "{point.properties.STATE}",
-                  },
+            ...options,
+            chart: {
+              events: {
+                drilldown: function (e) {
+                  const chart = this;
                 },
-                {
-                  type: "mapline",
-                  data: separators,
-                  color: "silver",
-                  enableMouseTracking: false,
-                  animation: {
-                    duration: 500,
-                  },
-                },
-              ],
+              },
             },
+            series: [
+              {
+                data: map,
+                name: mapKey,
+                dataLabels: {
+                  enabled: true,
+                  format: "{point.properties.code}",
+                },
+              },
+              {
+                type: "mapline",
+                data: separators,
+                color: "silver",
+                enableMouseTracking: false,
+                animation: {
+                  duration: 500,
+                },
+              },
+            ],
           };
         });
       });
+  }, []);
+
+  useEffect(() => {
+    loadMap("india");
+  }, []);
+
+  if (!mapLoaded) {
+    return <div>Loading...</div>;
+  }
+  return (
+    <div>
+      <h2>Highcharts</h2>
+      <HighchartsReact
+        highcharts={Highcharts}
+        options={options}
+        constructorType={"mapChart"}
+      />
+    </div>
+  );
+}
+
+class App2 extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      options: reactChartOptions,
+      mapLoaded: false,
+      mapKey: null,
+    };
+  }
+  componentDidMount() {
+    this.loadMap("india");
+  }
+
+  fetchMapData = async (mapKey) => {
+    return Promise.all([
+      fetch(`/${mapKey}.geojson`).then((res) => res.json()),
+      // FIXME: also return stats data
+    ]).then(([mapData /*, stats */]) => ({ mapData /*, stats */ }));
+  };
+
+  loadMap = async (mapKey) => {
+    const { mapData, stats } = await this.fetchMapData(mapKey);
+
+    const map = Highcharts.geojson(mapData);
+    const separators = Highcharts.geojson(mapData, "mapline");
+    // Set drilldown pointers
+    map.forEach(function (el, i) {
+      if (!el.properties.DISTRICT_L) {
+        el.drilldown = `states/${el.properties.STATE}`;
+      }
+      el.value = i; // FIXME: merge with stats
+      el.name = toTitleCase(el.properties.STATE);
+    });
+    const fetchMapData = this.fetchMapData;
+    this.setState(({ options }) => {
+      return {
+        mapLoaded: true,
+        mapKey,
+        options: {
+          ...options,
+          chart: {
+            events: {
+              drilldown: function (e) {
+                const chart = this;
+                if (!e.point.drilldown) {
+                  return;
+                }
+                // chart.showLoading(
+                //   '<i class="icon-spinner icon-spin icon-3x"></i>'
+                // );
+                chart.showLoading("<div>Loading...</div>");
+                fetchMapData(e.point.drilldown)
+                  .then(({ mapData, stats }) => ({
+                    map: Highcharts.geojson(mapData),
+                    stats,
+                  }))
+                  .then(({ map, stats }) => {
+                    // alter data to have name and value
+                    const data = map;
+                    data.forEach(function (el, i) {
+                      if (!el.properties.DISTRICT_L) {
+                        el.drilldown = `states/${el.properties.STATE}`;
+                      }
+                      el.value = i; // FIXME: merge with stats
+                      el.name = toTitleCase(el.properties.District);
+                    });
+                    chart.hideLoading();
+                    chart.addSeriesAsDrilldown(e.point, {
+                      name: e.point.name,
+                      data: data,
+                      dataLabels: {
+                        enabled: true,
+                        format: "{point.properties.District}",
+                      },
+                    });
+                  });
+                chart.setTitle(null, { text: e.point.name });
+              },
+              drillup: function (e) {
+                this.setTitle(null, { text: "" });
+              },
+            },
+          },
+          series: [
+            {
+              data: map,
+              name: toTitleCase(mapKey),
+              dataLabels: {
+                enabled: true,
+                format: "{point.properties.code}",
+              },
+            },
+            {
+              type: "mapline",
+              data: separators,
+              color: "silver",
+              enableMouseTracking: false,
+              animation: {
+                duration: 500,
+              },
+            },
+          ],
+        },
+      };
+    });
   };
 
   render() {
     if (!this.state.mapLoaded) {
       return <div>Loading...</div>;
     }
-
     return (
       <div>
         <h2>Highcharts</h2>
@@ -215,4 +341,4 @@ class App extends React.Component {
   }
 }
 
-export default App;
+export default App2;
