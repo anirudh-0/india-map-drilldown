@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Highcharts from "highcharts/highmaps";
 import HighchartsReact from "highcharts-react-official";
-import drilldow from "highcharts/modules/drilldown";
+import drilldown from "highcharts/modules/drilldown";
 import dataModule from "highcharts/modules/data";
 
-drilldow(Highcharts);
+drilldown(Highcharts);
 dataModule(Highcharts);
 
 const options = {
@@ -41,25 +41,7 @@ const options = {
     },
   },
 
-  series: [
-    // {
-    //   data: data,
-    //   name: "USA",
-    //   dataLabels: {
-    //     enabled: true,
-    //     format: "{point.properties.postal-code}",
-    //   },
-    // },
-    // {
-    //   type: "mapline",
-    //   data: separators,
-    //   color: "silver",
-    //   enableMouseTracking: false,
-    //   animation: {
-    //     duration: 500,
-    //   },
-    // },
-  ],
+  series: [],
 
   drilldown: {
     activeDataLabelStyle: {
@@ -82,63 +64,6 @@ const reactChartOptions = {
   chart: {},
   series: [],
 };
-
-// function App() {
-//   const [options, setOptions] = useState(reactChartOptions);
-//   const loadMap = useCallback(async (mapKey) => {
-//     fetch(`/${mapKey}.geojson`)
-//       .then((res) => res.json())
-//       .then((data) => {
-//         const map = Highcharts.geojson(data);
-//         const separators = Highcharts.geojson(data, "mapline");
-//         // Set drilldown pointers
-//         map.forEach(function (el, i) {
-//           el.drilldown = el.properties["hc-key"];
-//           el.value = i; // Non-random bogus data
-//         });
-//         setOptions((options) => {
-//           return {
-//             ...options,
-//             series: [
-//               {
-//                 data: map,
-//                 name: mapKey,
-//                 dataLabels: {
-//                   enabled: true,
-//                   format: "{point.properties.postal-code}",
-//                 },
-//               },
-//               {
-//                 type: "mapline",
-//                 data: separators,
-//                 color: "silver",
-//                 enableMouseTracking: false,
-//                 animation: {
-//                   duration: 500,
-//                 },
-//               },
-//             ],
-//           };
-//         });
-//       });
-//   }, []);
-
-//   useEffect(() => {
-//     loadMap("india");
-//   }, []);
-// //   return "Hi";
-
-//   return (
-//     <div>
-//       <h2>Highcharts</h2>
-//       <HighchartsReact
-//         highcharts={Highcharts}
-//         options={options}
-//         constructorType={"mapChart"}
-//       />
-//     </div>
-//   );
-// }
 
 function toTitleCase(str) {
   return str.replace(/\w\S*/g, function (txt) {
