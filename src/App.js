@@ -174,6 +174,7 @@ class App2 extends React.Component {
       }
       el.value = i; // FIXME: merge with stats
       el.name = toTitleCase(el.properties.STATE);
+      // el[premixKey] = stats[el.name].count;
     });
     const fetchMapData = this.fetchMapData;
     this.setState(({ options }) => {
@@ -233,6 +234,9 @@ class App2 extends React.Component {
                 enabled: true,
                 format: "{point.properties.code}",
               },
+              // tooltip: {
+              //   pointFormat: `{point.${premixKey}}`
+              // }
             },
             {
               type: "mapline",
