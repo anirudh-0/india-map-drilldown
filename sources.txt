@@ -1,0 +1,8 @@
+State codes
+https://www.iso.org/obp/ui/#iso:code:3166:IN
+
+geojson data
+https://onlinemaps.surveyofindia.gov.in/Digital_Product_Show.aspx
+
+reference demo
+https://codesandbox.io/s/highcharts-react-demo-uti0o?file=/demo.jsx
