@@ -9,7 +9,7 @@ dataModule(Highcharts);
 
 const options = {
   title: {
-    text: ""
+    text: "",
   },
 
   chart: {
@@ -79,11 +79,24 @@ class App2 extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      options: reactChartOptions,
+      options: {
+        ...reactChartOptions,
+        title: { text: props.title || "Temporary Title" },
+      },
       mapLoaded: false,
       mapKey: null,
     };
   }
+
+  static getDerivedStateFromProps(props, state) {
+    return {
+      options: {
+        ...state.options,
+        title: { text: props.title || "Temporary Title" },
+      },
+    };
+  }
+
   componentDidMount() {
     this.loadMap("india");
   }
