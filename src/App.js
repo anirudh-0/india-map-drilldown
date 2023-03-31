@@ -75,6 +75,10 @@ function toTitleCase(str) {
   });
 }
 
+function randomIntInRange(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 class App2 extends React.Component {
   constructor(props) {
     super(props);
@@ -84,7 +88,7 @@ class App2 extends React.Component {
         title: { text: props.title || "Temporary Title" },
       },
       mapLoaded: false,
-      mapKey: null,
+      mapKeys: [],
     };
   }
 
@@ -98,35 +102,59 @@ class App2 extends React.Component {
   }
 
   componentDidMount() {
-    this.loadMap("india");
+    this.loadMap(["india"]);
   }
 
-  fetchMapData = async (mapKey) => {
-    return Promise.all([
-      fetch(`/${mapKey}.geojson`).then((res) => res.json()),
-      // FIXME: also return stats data
-    ]).then(([mapData /*, stats */]) => ({ mapData /*, stats */ }));
+  getToolTipPointFormat = () => {
+    return `<div style="display: block;">
+    <div style="display: block; color: red;">Daily: {point.stats.dailyProductionRate}</div><br />
+    <div style="display: block;">Weekly: {point.stats.weeklyProductionRate}</div><br />
+    <div style="display: block;">Monthly: {point.stats.monthlyProductionRate}</div>
+    </div>`;
   };
 
-  loadMap = async (mapKey) => {
-    const { mapData, stats } = await this.fetchMapData(mapKey);
+  fetchRegionalStats = async (mapKeys) => {
+    return fetch(`/sample-${mapKeys.join("-")}.json`, {
+      // method: "POST",
+      // body: JSON.stringify({
+      //   state: this.state.mapKeys[1] || null, // if state then district-wise per state, if state is null, then state-wise of India
+      // }),
+    }).then((res) => res.json());
+  };
+
+  fetchMapData = async (mapKeys) => {
+    return Promise.all([
+      fetch(`/${mapKeys.join("/")}.geojson`).then((res) => res.json()),
+      this.fetchRegionalStats(mapKeys),
+      fetch(`/sample-${mapKeys.join("-")}.json`).then((res) => res.json()),
+      // FIXME: also return stats data
+    ]).then(([mapData, stats]) => ({ mapData, stats }));
+  };
+
+  loadMap = async (mapKeys) => {
+    const { mapData, stats } = await this.fetchMapData(mapKeys);
 
     const map = Highcharts.geojson(mapData);
     const separators = Highcharts.geojson(mapData, "mapline");
     // Set drilldown pointers
     map.forEach(function (el, i) {
-      if (!el.properties.DISTRICT_L) {
-        el.drilldown = `states/${el.properties.STATE}`;
-      }
-      el.value = i; // FIXME: merge with stats
+      el.drilldown = ["states", el.properties.STATE];
+      const stateStatistics = stats[el.properties.STATE] || {};
+      el.stats = {
+        dailyProductionRate: stateStatistics.dailyProductionRate || "N/A",
+        weeklyProductionRate: stateStatistics.weeklyProductionRate || "N/A",
+        monthlyProductionRate: stateStatistics.monthlyProductionRate || "N/A",
+      };
       el.name = toTitleCase(el.properties.STATE);
-      // el[premixKey] = stats[el.name].count;
+      el.value =
+        stateStatistics.weeklyProductionRate || randomIntInRange(0, 60);
     });
     const fetchMapData = this.fetchMapData;
+    const getToolTipPointFormat = this.getToolTipPointFormat;
     this.setState(({ options }) => {
       return {
         mapLoaded: true,
-        mapKey,
+        mapKeys: mapKeys,
         options: {
           ...options,
           chart: {
@@ -149,11 +177,20 @@ class App2 extends React.Component {
                     // alter data to have name and value
                     const data = map;
                     data.forEach(function (el, i) {
-                      if (!el.properties.DISTRICT_L) {
-                        el.drilldown = `states/${el.properties.STATE}`;
-                      }
-                      el.value = i; // FIXME: merge with stats
+                      const districtStatistics =
+                        stats[el.properties.District] || {};
+                      el.stats = {
+                        dailyProductionRate:
+                          districtStatistics.dailyProductionRate || "N/A",
+                        weeklyProductionRate:
+                          districtStatistics.weeklyProductionRate || "N/A",
+                        monthlyProductionRate:
+                          districtStatistics.monthlyProductionRate || "N/A",
+                      };
                       el.name = toTitleCase(el.properties.District);
+                      el.value =
+                        districtStatistics.weeklyProductionRate ||
+                        randomIntInRange(0, 5);
                     });
                     chart.hideLoading();
                     chart.addSeriesAsDrilldown(e.point, {
@@ -161,7 +198,11 @@ class App2 extends React.Component {
                       data: data,
                       dataLabels: {
                         enabled: true,
-                        format: "{point.properties.District}",
+                        format:
+                          "{point.properties.District}: {point.stats.weeklyProductionRate}",
+                      },
+                      tooltip: {
+                        pointFormat: getToolTipPointFormat(),
                       },
                     });
                   });
@@ -175,14 +216,15 @@ class App2 extends React.Component {
           series: [
             {
               data: map,
-              name: toTitleCase(mapKey),
+              name: toTitleCase(mapKeys.join("/")),
               dataLabels: {
                 enabled: true,
-                format: "{point.properties.code}",
+                format:
+                  "{point.properties.code}: {point.stats.weeklyProductionRate}",
               },
-              // tooltip: {
-              //   pointFormat: `{point.${premixKey}}`
-              // }
+              tooltip: {
+                pointFormat: this.getToolTipPointFormat(),
+              },
             },
             {
               type: "mapline",

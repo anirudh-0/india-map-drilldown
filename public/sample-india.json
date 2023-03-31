@@ -1,0 +1,17 @@
+{
+  "GUJARAT": {
+    "dailyProductionRate": 10,
+    "weeklyProductionRate": 40,
+    "monthlyProductionRate": 200
+  },
+  "ANDAMAN & NICOBAR": {
+    "dailyProductionRate": 2,
+    "weeklyProductionRate": 15,
+    "monthlyProductionRate": 50
+  },
+  "PUNJAB": {
+    "dailyProductionRate": 11,
+    "weeklyProductionRate": 38,
+    "monthlyProductionRate": 200
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "MORBI": {
+    "dailyProductionRate": 2,
+    "weeklyProductionRate": 5,
+    "monthlyProductionRate": 20
+  },
+  "AHMADABAD": {
+    "dailyProductionRate": 4,
+    "weeklyProductionRate": 10,
+    "monthlyProductionRate": 400
+  }
+}
