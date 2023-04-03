@@ -126,7 +126,7 @@ class App2 extends React.Component {
     return Promise.all([
       fetch(`/${mapKeys.join("/")}.geojson`).then((res) => res.json()),
       this.fetchRegionalStats(mapKeys),
-      fetch(`/sample-${mapKeys.join("-")}.json`).then((res) => res.json()),
+      // fetch(`/sample-${mapKeys.join("-")}.json`).then((res) => res.json()),
       // FIXME: also return stats data
     ]).then(([mapData, stats]) => ({ mapData, stats }));
   };
@@ -138,7 +138,7 @@ class App2 extends React.Component {
     const separators = Highcharts.geojson(mapData, "mapline");
     // Set drilldown pointers
     map.forEach(function (el, i) {
-      el.drilldown = ["states", el.properties.STATE];
+      el.drilldown = ["states", `State_${el.properties.State_LGD}`];
       const stateStatistics = stats[el.properties.STATE] || {};
       el.stats = {
         dailyProductionRate: stateStatistics.dailyProductionRate || "N/A",
